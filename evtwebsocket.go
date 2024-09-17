@@ -19,6 +19,7 @@ type Conn struct {
 	ws               *websocket.Conn
 	url              string
 	subprotocol      string
+	origin           string
 	closed           bool
 	msgQueue         []Msg
 	pingTimer        time.Time
@@ -34,10 +35,11 @@ type Msg struct {
 // host provided in the url parameter.
 // Note that all the parameters of the structure
 // must have been set before calling it.
-func (c *Conn) Dial(url, subprotocol string) error {
+func (c *Conn) Dial(url, subprotocol, origin string) error {
 	c.closed = true
 	c.url = url
 	c.subprotocol = subprotocol
+	c.origin = origin
 	c.msgQueue = []Msg{}
 	var err error
 	c.ws, err = websocket.Dial(url, subprotocol, "http://localhost/")
@@ -120,7 +122,7 @@ func (c *Conn) close() {
 	c.closed = true
 	if c.Reconnect {
 		for {
-			if err := c.Dial(c.url, c.subprotocol); err == nil {
+			if err := c.Dial(c.url, c.subprotocol, c.origin); err == nil {
 				break
 			}
 			time.Sleep(time.Second * 1)
